@@ -13,10 +13,11 @@ Library    RPA.Desktop
 
 *** Variables ***
 #Agrupamiento/devdata/Grupos.xlsx
-${EXCEL}    devdata/Grupos.xlsx
 ${USUARIO}    %{USUARIO_PROFESOR}
 ${PASSWORD}   %{PASSWORD}
 ${ASIGNATURA}    %{ASIGNATURA}
+${EXCEL}    %{ENTRADA}
+${SECCIONES}    False
 
 *** Keywords ***
 #Este proceso no ingresa el captcha si no que le pide al usuario ingresarlo
@@ -127,6 +128,10 @@ Agregar alumno
     #Se debe verificar si el nombre esta, si no se debe ver si el correo existe
     ${nombreDetectado}    Does Page Contain Element    xpath://option[contains(.,${nombre})]
     ${emailDetectado}    Does Page Contain Element    xpath://option[contains(.,${correo})]
+    #Verifica si hay muchos alumnos
+    
+    ${muchosUsuarios}    Does Page Contain Element    css:#addselect > optgroup:nth-child(1)
+    Log    Done
     #Si detecto el nombre
     IF    ${nombreDetectado} == True
         #Le hace click
@@ -153,6 +158,35 @@ Agregar alumno
         ELSE
             Log    ya estaba
         END
+
+    #Si aparecen muchos alumnos
+    ELSE IF    ${muchosUsuarios} == True
+        Input Text    id:addselect_searchtext    ${alumno}[Correo]
+        #Espera a que el alumno aparezca
+        ${alumnoDetectado}    Does Page Contain Element    //option[contains(.,${correo})]   
+        ${alumnoNoMatriculado}    Does Page Contain Element    //*[contains(@label,'usuario coincide')]  
+        FOR    ${counter}    IN RANGE    100
+            ${alumnoDetectado}    Does Page Contain Element    //option[contains(.,${correo})]   
+            ${alumnoNoMatriculado}    Does Page Contain Element    //*[contains(@label,'usuario coincide')]
+            Log    Done
+            IF    ${alumnoDetectado} == True
+                Click Element    xpath://option[contains(.,${correo})]
+                #Ve si esta en la zona de no agregados
+                ${agregar}    Is Element Enabled    id:add
+                IF    ${agregar}
+                    #lo agrega
+                    Click Button    id:add
+                    Log    agregado
+                END
+                Exit For Loop
+            ELSE IF    ${alumnoNoMatriculado} == True
+                Exit For Loop
+            END
+            Wait Seconds    1
+            
+        END
+        
+        Log    Done
     #Si no lo detecta
     ELSE
         Log    no agregado
@@ -173,9 +207,10 @@ Agregar alumnos
     Close Workbook
     #Para cada fila de la hoja (alumno)
     FOR    ${alumno}    IN    @{archivo}
-        #Verifica si el grupo ha sido creado
-        ${grupoExiste}    Does Page Contain    ${alumno}[Grupo]
+         #Verifica si el grupo ha sido creado
         ${grupo}    Add Quotes To String    ${alumno}[Grupo]
+        ${grupoExiste}    Does Page Contain Element     xpath://option[contains(.,${grupo})]
+        Log    Done
         #Si el grupo ha sido creado
         IF    ${grupoExiste} == True
             #Hace click en el grupo
@@ -191,6 +226,7 @@ Agregar alumnos
             Wait Seconds    0.5
             #Ve si el alumno esta en el grupo seleccionado
             ${alumnoAgregado}    Does Page Contain Element    xpath://option[contains(.,${nombre})]
+            Log    Done
             #Si el alumno no esta agregado, lo agrega
             IF    ${alumnoAgregado} == False
                 #Click en agregar
@@ -212,10 +248,12 @@ Agregar alumnos
 #Entrada: un row del archivo excel que representa a un grupo
 Crear Grupo
     [Arguments]    ${grupo}
-    #Ve si el grupo ya fue creado
-    ${existeGrupo}    Does Page Contain    ${grupo}[Grupo]
     #Le añade comillas simples para seleccionarlo
     ${grupoSeleccion}    Add Quotes To String    ${grupo}[Grupo]
+    #Ve si el grupo ya fue creado
+    ${existeGrupo}    Does Page Contain Element    //option[contains(.,${grupoSeleccion})]
+    Log    Done
+    
     #Si no ha sido creado, lo crea
     IF    ${existeGrupo} == ${False}
         #Va a la seccion de crear grupo y espera a que cargue
@@ -228,6 +266,7 @@ Crear Grupo
         Wait Until Page Contains Element    id:members    1 min
         #Le hace click al grupo para deseleccionarlo
         Click Element    xpath://option[contains(.,${grupoSeleccion})]
+        
     END  
         
 #Funcion que crea los grupos dado un archivo excel
@@ -354,8 +393,10 @@ Minimal task
     Ir a Seccion Grupos
     Crear Grupos
     Agregar alumnos
-    Ir a Agrupamientos
-    Crear Agrupamientos
-    Agregar Grupos a Secciones
+    IF    ${SECCIONES} == True
+        Ir a Agrupamientos
+        Crear Agrupamientos
+        Agregar Grupos a Secciones
+    END
     Interfaz Final
     Log    Done.

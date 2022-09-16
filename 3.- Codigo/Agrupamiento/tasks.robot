@@ -70,6 +70,8 @@ Seleccionar Curso
     ${string_vacio}    String Is Empty    ${ASIGNATURA}
     #Verifica si el bot encontro el curso
     ${curso_existe}    Does Page Contain    ${ASIGNATURA}
+    ${test}    Does Page Contain Element    //a[contains(text(),'${ASIGNATURA}')]
+    Log    Done
     #Si existe le hace click
     IF    ${string_vacio}
         Interfaz Seleccionar Curso

@@ -17,7 +17,7 @@ ${USUARIO}    %{USUARIO_PROFESOR}
 ${PASSWORD}   %{PASSWORD}
 ${ASIGNATURA}    %{ASIGNATURA}
 ${EXCEL}    %{ENTRADA}
-${SECCIONES}    False
+${SECCIONES}    True
 
 *** Keywords ***
 #Este proceso no ingresa el captcha si no que le pide al usuario ingresarlo

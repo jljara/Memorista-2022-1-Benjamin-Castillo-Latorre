@@ -123,6 +123,9 @@ Agregar alumno
     [Arguments]    ${alumno}
     #Concatena los nombres con los apellidos del alumno
     ${nombre}    Concat Names    ${alumno}[Nombres]    ${alumno}[Paterno]    ${alumno}[Materno]
+    #Correo con la primera letra en mayus
+    ${correoCap}    Capitalize String    ${alumno}[Correo]
+    ${correoCap}    Add Quotes To String    ${correoCap}
     #Le añade comillas simples al nombre para poder buscarlo en la pagina
     ${nombre}    Add Quotes To String    ${nombre}
     #Le añade comillas simples al correo para poder buscarlo en la pagina
@@ -130,10 +133,9 @@ Agregar alumno
     #Se debe verificar si el nombre esta, si no se debe ver si el correo existe
     ${nombreDetectado}    Does Page Contain Element    xpath://option[contains(.,${nombre})]
     ${emailDetectado}    Does Page Contain Element    xpath://option[contains(.,${correo})]
+    ${emailCapDetectado}    Does Page Contain Element    xpath://option[contains(.,${correoCap})]
     #Verifica si hay muchos alumnos
-    
     ${muchosUsuarios}    Does Page Contain Element    css:#addselect > optgroup:nth-child(1)
-    Log    Done
     #Si detecto el nombre
     IF    ${nombreDetectado} == True
         #Le hace click
@@ -160,12 +162,23 @@ Agregar alumno
         ELSE
             Log    ya estaba
         END
-
+    ELSE IF    ${emailCapDetectado} == tRUE
+        Click Element    xpath://option[contains(.,${correoCap})]
+        #verifica si esta en la zona de no agregados
+        ${agregar}    Is Element Enabled    id:add
+        IF    ${agregar}
+            Click Button    id:add
+            Log    agregado
+        #Si ya esta agregado
+        ELSE
+            Log    ya estaba
+        END
     #Si aparecen muchos alumnos
     ELSE IF    ${muchosUsuarios} == True
         Input Text    id:addselect_searchtext    ${alumno}[Correo]
         #Espera a que el alumno aparezca
-        ${alumnoDetectado}    Does Page Contain Element    //option[contains(.,${correo})]   
+        ${alumnoDetectado}    Does Page Contain Element    //option[contains(.,${correo})]
+        ${emailCapDetectado}    Does Page Contain Element    xpath://option[contains(.,${correoCap})]
         ${alumnoNoMatriculado}    Does Page Contain Element    //*[contains(@label,'usuario coincide')]  
         FOR    ${counter}    IN RANGE    100
             ${alumnoDetectado}    Does Page Contain Element    //option[contains(.,${correo})]   
@@ -173,6 +186,16 @@ Agregar alumno
             Log    Done
             IF    ${alumnoDetectado} == True
                 Click Element    xpath://option[contains(.,${correo})]
+                #Ve si esta en la zona de no agregados
+                ${agregar}    Is Element Enabled    id:add
+                IF    ${agregar}
+                    #lo agrega
+                    Click Button    id:add
+                    Log    agregado
+                END
+                Exit For Loop
+            ELSE IF    ${emailCapDetectado} == True
+                Click Element    xpath://option[contains(.,${correoCap})]
                 #Ve si esta en la zona de no agregados
                 ${agregar}    Is Element Enabled    id:add
                 IF    ${agregar}

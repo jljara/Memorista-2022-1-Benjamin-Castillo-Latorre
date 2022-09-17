@@ -61,3 +61,21 @@ def string_to_float(string,boolean):
 def format_table_name(name):
     realName = name.replace("Revisión del intento","")
     return realName
+
+def capitalize_string(string):
+    string = string.capitalize()
+    return string
+
+def upcase_string(string):
+    string = string.upper()
+    return string
+
+def lowercase_string(string):
+    string = string.lower()
+    return string
+
+def is_upcase_string(string):
+    return string.isupper()
+
+def is_lowercase_string(string):
+    return string.islower()

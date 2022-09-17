@@ -40,3 +40,21 @@ def wait_seconds(seconds):
 def get_position_in_table(position):
     path = 'xpath://tr[' + str(position) + ']/td[4]/a[3]'
     return path
+
+def capitalize_string(string):
+    string = string.capitalize()
+    return string
+
+def upcase_string(string):
+    string = string.upper()
+    return string
+
+def lowercase_string(string):
+    string = string.lower()
+    return string
+
+def is_upcase_string(string):
+    return string.isupper()
+
+def is_lowercase_string(string):
+    return string.islower()
